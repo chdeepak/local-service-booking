@@ -91,15 +91,11 @@ echo "=========================================="
 echo "Step 3: Configure Systemd Service"
 echo "=========================================="
 
-if [ ! -f /etc/systemd/system/local-service-booking.service ]; then
-  echo "📋 Setting up systemd service..."
-  sudo cp ~/local-service-booking/scripts/local-service-booking.service /etc/systemd/system/
-  sudo systemctl daemon-reload
-  sudo systemctl enable local-service-booking
-  echo "✓ Service configured"
-else
-  echo "✓ Service already configured"
-fi
+echo "📋 Setting up systemd service..."
+sudo cp ~/local-service-booking/scripts/local-service-booking.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable local-service-booking
+echo "✓ Service configured"
 
 echo ""
 echo "=========================================="
