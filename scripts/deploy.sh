@@ -5,24 +5,11 @@ echo "=========================================="
 echo "Step 1: Initial Setup"
 echo "=========================================="
 
-# Detect OS
-if [ -f /etc/os-release ]; then
-  . /etc/os-release
-  OS=$ID
-fi
-
-echo "🔍 Detected OS: $OS"
-
 # Install Node.js
 if ! command -v node &> /dev/null; then
   echo "⚠ Node.js not found - installing..."
-  if [ "$OS" = "amzn" ]; then
-    curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
-    sudo yum install -y nodejs
-  else
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-    sudo apt-get install -y nodejs
-  fi
+  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+  sudo apt-get install -y nodejs
   echo "✓ Node.js installed: $(node --version)"
 else
   echo "✓ Node.js: $(node --version)"
@@ -31,12 +18,8 @@ fi
 # Install Nginx
 if ! command -v nginx &> /dev/null; then
   echo "⚠ Nginx not found - installing..."
-  if [ "$OS" = "amzn" ]; then
-    sudo yum install -y nginx
-  else
-    sudo apt-get update
-    sudo apt-get install -y nginx
-  fi
+  sudo apt-get update
+  sudo apt-get install -y nginx
   echo "✓ Nginx installed"
 else
   echo "✓ Nginx already installed"
@@ -45,18 +28,7 @@ fi
 # Install Git
 if ! command -v git &> /dev/null; then
   echo "⚠ Git not found - installing..."
-  if [ "$OS" = "amzn" ]; then
-    sudo yum install -y git
-  else
-    sudo apt-get install -y git
-  fi
-  echo "✓ Git installed"
-else
-  echo "✓ Git already installed"
-fi
-
-echo ""
-echo "=========================================="
+  sudo apt-get install -y git
 echo "Step 2: Deploy Application"
 echo "=========================================="
 
@@ -67,7 +39,7 @@ if [ ! -d ~/local-service-booking ]; then
   git clone https://github.com/chdeepak/local-service-booking.git .
 else
   cd ~/local-service-booking
-  git pull origin main
+  git pull origin main || git fetch && git reset --hard origin/main
 fi
 
 echo "✓ Code synced"
@@ -92,7 +64,7 @@ echo "Step 3: Configure Systemd Service"
 echo "=========================================="
 
 echo "📋 Setting up systemd service..."
-sudo cp ~/local-service-booking/scripts/local-service-booking.service /etc/systemd/system/
+sudo cp ~/local-service-booking/scripts/local-service-booking.service /etc/systemd/system/local-service-booking.service
 sudo systemctl daemon-reload
 sudo systemctl enable local-service-booking
 echo "✓ Service configured"
@@ -102,42 +74,11 @@ echo "=========================================="
 echo "Step 4: Configure Nginx"
 echo "=========================================="
 
-if [ "$OS" = "amzn" ]; then
-  echo "🌐 Configuring Nginx for Amazon Linux..."
-  sudo tee /etc/nginx/conf.d/local-service-booking.conf > /dev/null << 'EOF'
-server {
-  listen 80 default_server;
-  server_name _;
-  location / {
-    proxy_pass http://localhost:3000;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection upgrade;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-    proxy_cache_bypass $http_upgrade;
-  }
-  location /health {
-    proxy_pass http://localhost:3000/health;
-    access_log off;
-  }
-}
-EOF
-else
-  echo "🌐 Configuring Nginx for Debian/Ubuntu..."
-  sudo mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
-  sudo cp ~/local-service-booking/scripts/nginx-config.conf /etc/nginx/sites-available/local-service-booking
-  sudo ln -sf /etc/nginx/sites-available/local-service-booking /etc/nginx/sites-enabled/
-  sudo rm -f /etc/nginx/sites-enabled/default
-fi
-
-echo "✓ Nginx configured"
-
-echo "🔍 Testing Nginx..."
-sudo nginx -t || { echo "❌ Nginx test failed"; exit 1; }
-
+echo "🌐 Configuring Nginx for Ubuntu..."
+sudo mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
+sudo cp ~/local-service-booking/scripts/nginx-config.conf /etc/nginx/sites-available/local-service-booking
+sudo ln -sf /etc/nginx/sites-available/local-service-booking /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
 echo ""
 echo "=========================================="
 echo "Step 5: Start Services"
@@ -153,4 +94,10 @@ sudo systemctl restart nginx
 sudo systemctl status nginx --no-pager || true
 
 echo ""
-echo "✅ Deployment successful!"
+echo "🧪 Testing endpoints..."
+echo "Testing http://localhost:3000/health"
+curl -s http://localhost:3000/health || echo "⚠ App endpoint not responding yet"
+
+echo ""
+echo "Testing http://localhost/health (via Nginx)"
+curl -s http://localhost/health || echo "⚠ Nginx endpoint not responding yet"
