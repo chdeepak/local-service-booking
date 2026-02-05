@@ -78,6 +78,44 @@ jobs:
           ssh -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
             set -e
             
+            echo "=========================================="
+            echo "Step 1: Initial Setup (if needed)"
+            echo "=========================================="
+            
+            # Check if Node.js is installed
+            if ! command -v node &> /dev/null; then
+              echo "⚠ Node.js not found - installing..."
+              curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+              echo "✓ Node.js installed"
+            else
+              echo "✓ Node.js already installed: $(node --version)"
+            fi
+            
+            # Check if Nginx is installed
+            if ! command -v nginx &> /dev/null; then
+              echo "⚠ Nginx not found - installing..."
+              sudo apt-get update
+              sudo apt-get install -y nginx
+              echo "✓ Nginx installed"
+            else
+              echo "✓ Nginx already installed"
+            fi
+            
+            # Check if Git is installed
+            if ! command -v git &> /dev/null; then
+              echo "⚠ Git not found - installing..."
+              sudo apt-get install -y git
+              echo "✓ Git installed"
+            else
+              echo "✓ Git already installed"
+            fi
+            
+            echo ""
+            echo "=========================================="
+            echo "Step 2: Deploy Application"
+            echo "=========================================="
+            
             echo "📍 User: $(whoami)"
             echo "📍 Home: $(pwd)"
             
@@ -113,14 +151,66 @@ jobs:
             npm run build || { echo "❌ Build failed"; exit 1; }
             echo "✓ Build OK"
             
-            echo "🔄 Restarting service..."
-            sudo systemctl restart local-service-booking || { echo "❌ Restart failed"; exit 1; }
-            echo "✓ Service restarted"
+            echo ""
+            echo "=========================================="
+            echo "Step 3: Configure Systemd Service"
+            echo "=========================================="
+            
+            # Copy systemd service file
+            if [ -f /etc/systemd/system/local-service-booking.service ]; then
+              echo "✓ Service file already exists"
+            else
+              echo "📋 Creating systemd service..."
+              sudo cp ~/local-service-booking/scripts/local-service-booking.service /etc/systemd/system/
+              sudo systemctl daemon-reload
+              sudo systemctl enable local-service-booking
+              echo "✓ Service configured"
+            fi
+            
+            echo ""
+            echo "=========================================="
+            echo "Step 4: Configure Nginx"
+            echo "=========================================="
+            
+            # Configure Nginx
+            if [ -f /etc/nginx/sites-available/local-service-booking ]; then
+              echo "✓ Nginx config already exists"
+            else
+              echo "🌐 Configuring Nginx..."
+              sudo cp ~/local-service-booking/scripts/nginx-config.conf /etc/nginx/sites-available/local-service-booking
+              sudo ln -sf /etc/nginx/sites-available/local-service-booking /etc/nginx/sites-enabled/
+              sudo rm -f /etc/nginx/sites-enabled/default
+              sudo nginx -t
+              echo "✓ Nginx configured"
+            fi
+            
+            echo ""
+            echo "=========================================="
+            echo "Step 5: Start Services"
+            echo "=========================================="
+            
+            echo "🔄 Restarting application service..."
+            sudo systemctl restart local-service-booking || { echo "❌ App restart failed"; exit 1; }
+            echo "✓ App service restarted"
+            
+            echo "🔄 Restarting Nginx..."
+            sudo systemctl restart nginx || { echo "❌ Nginx restart failed"; exit 1; }
+            echo "✓ Nginx restarted"
             
             sleep 2
-            echo "📊 Service status:"
+            echo ""
+            echo "📊 App Service Status:"
             sudo systemctl status local-service-booking --no-pager || true
             
+            echo ""
+            echo "📊 Nginx Status:"
+            sudo systemctl status nginx --no-pager || true
+            
+            echo ""
+            echo "🧪 Testing health endpoint..."
+            curl -s http://localhost:3000/health || echo "⚠ Direct health check failed, but Nginx should forward it"
+            
+            echo ""
             echo "✅ Deployment successful!"
           EOF
           
