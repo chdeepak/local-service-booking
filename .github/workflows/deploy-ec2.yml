@@ -177,13 +177,17 @@ jobs:
             echo "🔍 Node: $(node --version)"
             echo "🔍 npm: $(npm --version)"
             
-            echo "📦 Installing dependencies..."
-            npm ci --omit=dev || { echo "❌ npm install failed"; exit 1; }
+            echo "📦 Installing all dependencies (including dev for build)..."
+            npm ci || { echo "❌ npm install failed"; exit 1; }
             echo "✓ Dependencies OK"
             
             echo "🔨 Building..."
             npm run build || { echo "❌ Build failed"; exit 1; }
             echo "✓ Build OK"
+            
+            echo "🧹 Removing dev dependencies..."
+            npm prune --production || { echo "⚠ Prune had issues"; }
+            echo "✓ Dev dependencies removed"
             
             echo ""
             echo "=========================================="
