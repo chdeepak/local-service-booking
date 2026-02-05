@@ -82,12 +82,34 @@ jobs:
             echo "Step 1: Initial Setup (if needed)"
             echo "=========================================="
             
+            # Detect OS
+            if [ -f /etc/os-release ]; then
+              . /etc/os-release
+              OS=$ID
+            fi
+            
+            echo "🔍 Detected OS: $OS"
+            
             # Check if Node.js is installed
             if ! command -v node &> /dev/null; then
               echo "⚠ Node.js not found - installing..."
-              curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-              sudo apt-get install -y nodejs
-              echo "✓ Node.js installed"
+              
+              if [ "$OS" = "amzn" ]; then
+                # Amazon Linux
+                echo "📦 Installing Node.js on Amazon Linux..."
+                curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+                sudo yum install -y nodejs
+              elif [ "$OS" = "ubuntu" ] || [ "$OS" = "debian" ]; then
+                # Ubuntu/Debian
+                echo "📦 Installing Node.js on Debian/Ubuntu..."
+                curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+                sudo apt-get install -y nodejs
+              else
+                echo "⚠ Unknown OS: $OS - attempting generic installation..."
+                curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash - || curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+              fi
+              
+              echo "✓ Node.js installed: $(node --version)"
             else
               echo "✓ Node.js already installed: $(node --version)"
             fi
@@ -95,8 +117,14 @@ jobs:
             # Check if Nginx is installed
             if ! command -v nginx &> /dev/null; then
               echo "⚠ Nginx not found - installing..."
-              sudo apt-get update
-              sudo apt-get install -y nginx
+              
+              if [ "$OS" = "amzn" ]; then
+                sudo yum install -y nginx
+              else
+                sudo apt-get update
+                sudo apt-get install -y nginx
+              fi
+              
               echo "✓ Nginx installed"
             else
               echo "✓ Nginx already installed"
@@ -105,7 +133,13 @@ jobs:
             # Check if Git is installed
             if ! command -v git &> /dev/null; then
               echo "⚠ Git not found - installing..."
-              sudo apt-get install -y git
+              
+              if [ "$OS" = "amzn" ]; then
+                sudo yum install -y git
+              else
+                sudo apt-get install -y git
+              fi
+              
               echo "✓ Git installed"
             else
               echo "✓ Git already installed"
