@@ -215,8 +215,7 @@ jobs:
               echo "🌐 Configuring Nginx for Amazon Linux..."
               NGINX_CONF="/etc/nginx/conf.d/local-service-booking.conf"
               
-              sudo bash -c 'cat > '$NGINX_CONF' << EOF
-server {
+              echo "server {
     listen 80 default_server;
     server_name _;
     location / {
@@ -234,9 +233,7 @@ server {
         proxy_pass http://localhost:3000/health;
         access_log off;
     }
-}
-EOF
-'
+}" | sudo tee $NGINX_CONF > /dev/null
               echo "✓ Nginx configured for Amazon Linux"
             else
               echo "🌐 Configuring Nginx for Debian/Ubuntu..."
