@@ -26,9 +26,35 @@ jobs:
           # Create SSH key file
           echo "📝 Setting up SSH key..."
           mkdir -p ~/.ssh
+          
+          # Write key with proper formatting
           echo "$EC2_KEY" > ~/.ssh/ec2_key.pem
+          
+          # Fix potential line ending issues
+          dos2unix ~/.ssh/ec2_key.pem 2>/dev/null || sed -i 's/\r$//' ~/.ssh/ec2_key.pem || true
+          
+          # Set proper permissions
           chmod 600 ~/.ssh/ec2_key.pem
-          echo "✓ SSH key created"
+          
+          # Validate key format
+          if grep -q "BEGIN.*PRIVATE KEY" ~/.ssh/ec2_key.pem; then
+            echo "✓ SSH key format is valid"
+          else
+            echo "❌ SSH key format is invalid!"
+            echo "Key content preview:"
+            head -1 ~/.ssh/ec2_key.pem
+            tail -1 ~/.ssh/ec2_key.pem
+            exit 1
+          fi
+          
+          # Check key file size
+          KEY_SIZE=$(wc -c < ~/.ssh/ec2_key.pem)
+          echo "✓ SSH key size: $KEY_SIZE bytes"
+          
+          if [ $KEY_SIZE -lt 100 ]; then
+            echo "❌ Key is too small - likely incomplete!"
+            exit 1
+          fi
           
           # Add EC2 host to known_hosts
           echo "🔑 Adding host to known_hosts..."
@@ -37,7 +63,7 @@ jobs:
           
           # Test SSH connection
           echo "🧪 Testing SSH connection to $EC2_USER@$EC2_HOST..."
-          ssh -i ~/.ssh/ec2_key.pem -o ConnectTimeout=10 $EC2_USER@$EC2_HOST "echo 'SSH OK'" || {
+          ssh -v -i ~/.ssh/ec2_key.pem -o ConnectTimeout=10 -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "echo 'SSH OK'" || {
             echo "❌ SSH connection failed!"
             exit 1
           }
@@ -49,7 +75,7 @@ jobs:
           echo "Running deployment on EC2"
           echo "=========================================="
           
-          ssh -i ~/.ssh/ec2_key.pem -o ConnectTimeout=10 $EC2_USER@$EC2_HOST << 'EOF'
+          ssh -i ~/.ssh/ec2_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
             set -e
             
             echo "📍 User: $(whoami)"
