@@ -212,54 +212,41 @@ jobs:
             
             # Configure Nginx based on OS
             if [ "$OS" = "amzn" ]; then
-              # Amazon Linux uses /etc/nginx/conf.d/
               echo "🌐 Configuring Nginx for Amazon Linux..."
               NGINX_CONF="/etc/nginx/conf.d/local-service-booking.conf"
               
-              # Create simplified config for Amazon Linux
-              cat << 'EOF' | sudo tee $NGINX_CONF > /dev/null
+              sudo bash -c 'cat > '$NGINX_CONF' << EOF
 server {
     listen 80 default_server;
     server_name _;
-
     location / {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_cache_bypass \$http_upgrade;
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
+        proxy_set_header Upgrade \\\$http_upgrade;
+        proxy_set_header Connection upgrade;
+        proxy_set_header Host \\\$host;
+        proxy_set_header X-Real-IP \\\$remote_addr;
+        proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \\\$scheme;
+        proxy_cache_bypass \\\$http_upgrade;
     }
-
     location /health {
         proxy_pass http://localhost:3000/health;
         access_log off;
     }
 }
 EOF
+'
+              echo "✓ Nginx configured for Amazon Linux"
             else
-              # Ubuntu/Debian use sites-available/sites-enabled
               echo "🌐 Configuring Nginx for Debian/Ubuntu..."
-              
-              # Ensure sites-available/sites-enabled directories exist
               sudo mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
-              
-              if [ -f /etc/nginx/sites-available/local-service-booking ]; then
-                echo "✓ Nginx config already exists"
-              else
-                sudo cp ~/local-service-booking/scripts/nginx-config.conf /etc/nginx/sites-available/local-service-booking
-                sudo ln -sf /etc/nginx/sites-available/local-service-booking /etc/nginx/sites-enabled/
-                sudo rm -f /etc/nginx/sites-enabled/default
-              fi
+              sudo cp ~/local-service-booking/scripts/nginx-config.conf /etc/nginx/sites-available/local-service-booking
+              sudo ln -sf /etc/nginx/sites-available/local-service-booking /etc/nginx/sites-enabled/
+              sudo rm -f /etc/nginx/sites-enabled/default
+              echo "✓ Nginx configured for Debian/Ubuntu"
             fi
             
-            # Test nginx config
             echo "🔍 Testing Nginx configuration..."
             sudo nginx -t || { echo "❌ Nginx config test failed"; exit 1; }
             echo "✓ Nginx config is valid"
