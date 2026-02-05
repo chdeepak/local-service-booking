@@ -29,6 +29,13 @@ fi
 if ! command -v git &> /dev/null; then
   echo "⚠ Git not found - installing..."
   sudo apt-get install -y git
+  echo "✓ Git installed"
+else
+  echo "✓ Git already installed"
+fi
+
+echo ""
+echo "=========================================="
 echo "Step 2: Deploy Application"
 echo "=========================================="
 
@@ -79,6 +86,11 @@ sudo mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
 sudo cp ~/local-service-booking/scripts/nginx-config.conf /etc/nginx/sites-available/local-service-booking
 sudo ln -sf /etc/nginx/sites-available/local-service-booking /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
+echo "✓ Nginx configured"
+
+echo "🔍 Testing Nginx..."
+sudo nginx -t || { echo "❌ Nginx test failed"; exit 1; }
+
 echo ""
 echo "=========================================="
 echo "Step 5: Start Services"
@@ -101,3 +113,6 @@ curl -s http://localhost:3000/health || echo "⚠ App endpoint not responding ye
 echo ""
 echo "Testing http://localhost/health (via Nginx)"
 curl -s http://localhost/health || echo "⚠ Nginx endpoint not responding yet"
+
+echo ""
+echo "✅ Deployment successful!"
