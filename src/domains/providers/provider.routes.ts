@@ -4,14 +4,6 @@ import { ProviderService } from './provider.service.js';
 const router = Router();
 const providerService = new ProviderService();
 
-function parseName(body: unknown): string | null {
-  if (!body || typeof body !== 'object') return null;
-  const name = (body as { name?: unknown }).name;
-  if (typeof name !== 'string') return null;
-  const trimmed = name.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
-
 // GET /providers - Get all providers
 router.get('/', async (req, res) => {
   try {
@@ -38,7 +30,7 @@ router.get('/:id', async (req, res) => {
 // POST /providers - Create new provider
 router.post('/', async (req, res) => {
   try {
-    const name = parseName(req.body);
+    const { name } = req.body;
     if (!name) {
       return res.status(400).json({ error: 'Name is required' });
     }
@@ -52,11 +44,7 @@ router.post('/', async (req, res) => {
 // PUT /providers/:id - Update provider
 router.put('/:id', async (req, res) => {
   try {
-    const name = parseName(req.body);
-    if (!name) {
-      return res.status(400).json({ error: 'Name is required' });
-    }
-
+    const { name } = req.body;
     const provider = await providerService.update(req.params.id, { name });
     if (!provider) {
       return res.status(404).json({ error: 'Provider not found' });
