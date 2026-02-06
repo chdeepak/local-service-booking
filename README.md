@@ -20,3 +20,14 @@ Example env vars (GitHub Secrets):
 - `DB_SSL`: true
 
 The code falls back to `postgres://localhost:5432/booking` when none of the vars are set.
+
+---
+
+## Viewing logs 🧾
+
+- Local development: run `npm run dev` and watch the terminal output — logs are printed to stdout/stderr.
+- Systemd (production on EC2): if you install the provided `scripts/local-service-booking.service`, view logs with:
+  - `sudo journalctl -u local-service-booking -f` (follow logs in real time)
+- Docker: `docker logs -f <container-id>`
+
+We log full error objects (including stack traces) for DB connection failures and route handlers, so check the app logs when you see `Failed to fetch providers` to find the underlying cause (e.g. missing table, network/auth error).
