@@ -7,7 +7,7 @@ export class ProviderRepository {
       const result = await pool.query('SELECT id, name FROM providers');
       return result.rows.map(row => ({
         id: row.id,
-        name: row.name,
+        name: row.name
       }));
     } catch (error) {
       console.error('Error fetching providers:', error);
@@ -22,7 +22,7 @@ export class ProviderRepository {
       const row = result.rows[0];
       return {
         id: row.id,
-        name: row.name,
+        name: row.name
       };
     } catch (error) {
       console.error('Error fetching provider:', error);
@@ -30,51 +30,6 @@ export class ProviderRepository {
     }
   }
 
-  async create(provider: Omit<Provider, 'id'>): Promise<Provider> {
-    try {
-      const result = await pool.query(
-        'INSERT INTO providers (name) VALUES ($1) RETURNING id, name',
-        [provider.name]
-      );
-      return {
-        id: result.rows[0].id,
-        name: result.rows[0].name,
-      };
-    } catch (error) {
-      console.error('Error creating provider:', error);
-      throw error;
-    }
-  }
-
-  async update(id: string, provider: Partial<Provider>): Promise<Provider | null> {
-    try {
-      const updates = [];
-      const values = [];
-      let paramCount = 1;
-
-      if (provider.name !== undefined) {
-        updates.push(`name = $${paramCount++}`);
-        values.push(provider.name);
-      }
-
-      if (updates.length === 0) return this.findById(id);
-
-      values.push(id);
-      const query = `UPDATE providers SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING id, name, "serviceTypes"`;
-
-      const result = await pool.query(query, values);
-      if (result.rows.length === 0) return null;
-
-      const row = result.rows[0];
-      return {
-        id: row.id,
-        name: row.name,
-      };
-    } catch (error) {
-      console.error('Error updating provider:', error);
-      throw error;
-    }
-  }
 
   async delete(id: string): Promise<boolean> {
     try {
