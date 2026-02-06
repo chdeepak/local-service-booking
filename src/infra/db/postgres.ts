@@ -8,7 +8,7 @@ export const getPool = (): Pool => {
     const connectionString = getConnectionString();
     pool = new Pool({ connectionString });
     
-    pool.on('error', (err) => {
+    pool.on('error', (err: Error) => {
       console.error('[ERROR] Postgres pool error:', err);
     });
   }
