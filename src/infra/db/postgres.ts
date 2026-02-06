@@ -6,8 +6,8 @@ let pool: Pool | null = null;
 export const getPool = (): Pool => {
   if (!pool) {
     const connectionString = getConnectionString();
-    pool = new Pool({ connectionString });
-    
+    pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
+
     pool.on('error', (err: Error) => {
       console.error('[ERROR] Postgres pool error:', err);
     });
