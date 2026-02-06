@@ -5,6 +5,7 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/home/ubuntu/local-service-booking
+EnvironmentFile=/etc/local-service-booking/.env
 Environment="NODE_ENV=production"
 Environment="PORT=3000"
 ExecStart=/usr/bin/node dist/main.js

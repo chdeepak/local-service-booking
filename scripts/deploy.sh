@@ -67,7 +67,23 @@ npm prune --production || true
 
 echo ""
 echo "=========================================="
-echo "Step 3: Configure Systemd Service"
+echo "Step 3: Configure Environment"
+echo "=========================================="
+
+if [ -z "$DATABASE_URL" ]; then
+  echo "❌ ERROR: DATABASE_URL is not set"
+  exit 1
+fi
+
+echo "📝 Creating environment file..."
+sudo mkdir -p /etc/local-service-booking
+echo "DATABASE_URL=$DATABASE_URL" | sudo tee /etc/local-service-booking/.env > /dev/null
+sudo chmod 600 /etc/local-service-booking/.env
+echo "✓ Environment configured"
+
+echo ""
+echo "=========================================="
+echo "Step 4: Configure Systemd Service"
 echo "=========================================="
 
 echo "📋 Setting up systemd service..."
@@ -78,10 +94,10 @@ echo "✓ Service configured"
 
 echo ""
 echo "=========================================="
-echo "Step 4: Configure Nginx"
+echo "Step 5: Configure Nginx"
 echo "=========================================="
 
-echo "🌐 Configuring Nginx for Ubuntu..."
+echo "🌐 Configuring Nginx..."
 sudo mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
 sudo cp ~/local-service-booking/scripts/nginx-config.conf /etc/nginx/sites-available/local-service-booking
 sudo ln -sf /etc/nginx/sites-available/local-service-booking /etc/nginx/sites-enabled/
@@ -93,7 +109,7 @@ sudo nginx -t || { echo "❌ Nginx test failed"; exit 1; }
 
 echo ""
 echo "=========================================="
-echo "Step 5: Start Services"
+echo "Step 6: Start Services"
 echo "=========================================="
 
 echo "🔄 Restarting application..."
@@ -107,12 +123,9 @@ sudo systemctl status nginx --no-pager || true
 
 echo ""
 echo "🧪 Testing endpoints..."
-echo "Testing http://localhost:3000/health"
-curl -s http://localhost:3000/health || echo "⚠ App endpoint not responding yet"
-
-echo ""
-echo "Testing http://localhost/health (via Nginx)"
-curl -s http://localhost/health || echo "⚠ Nginx endpoint not responding yet"
+sleep 1
+echo "Testing health endpoint..."
+curl -s http://localhost/health || echo "⚠ Health endpoint not responding yet"
 
 echo ""
 echo "✅ Deployment successful!"
