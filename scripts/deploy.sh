@@ -72,8 +72,7 @@ echo "=========================================="
 
 echo "📋 Setting up systemd service..."
 # Write environment file (populated from GitHub Action secrets passed into this script's environment)
-# Note: unquoted heredoc so variables expand correctly.
-sudo tee /etc/local-service-booking.env > /dev/null <<ENV
+sudo tee /etc/local-service-booking.env > /dev/null <<'ENV'
 DATABASE_URL="${DATABASE_URL:-}"
 DB_HOST="${DB_HOST:-}"
 DB_USER="${DB_USER:-}"
