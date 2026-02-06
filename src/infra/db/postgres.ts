@@ -6,14 +6,11 @@ let pool: Pool | null = null;
 export const getPool = (): Pool => {
   if (!pool) {
     const connectionString = getConnectionString();
-    const config: any = { connectionString };
-    
-    // Handle SSL for RDS databases
-    if (process.env.NODE_ENV === 'production' || process.env.DATABASE_URL?.includes('rds')) {
-      config.ssl = { rejectUnauthorized: false };
-    }
-    
-    pool = new Pool(config);
+    // Always disable SSL cert verification for RDS and self-signed certificates
+    pool = new Pool({
+      connectionString,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    });
 
     pool.on('error', (err: Error) => {
       console.error('[ERROR] Postgres pool error:', err);
