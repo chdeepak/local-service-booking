@@ -5,8 +5,8 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/home/ubuntu/local-service-booking
-Environment="NODE_ENV=production"
-Environment="PORT=3000"
+# Load environment variables from a file (managed by deploy script)
+EnvironmentFile=/etc/local-service-booking.env
 ExecStart=/usr/bin/node dist/main.js
 Restart=on-failure
 RestartSec=10
