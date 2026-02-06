@@ -71,19 +71,6 @@ echo "Step 3: Configure Systemd Service"
 echo "=========================================="
 
 echo "📋 Setting up systemd service..."
-# Write environment file (populated from GitHub Action secrets passed into this script's environment)
-sudo tee /etc/local-service-booking.env > /dev/null <<'ENV'
-DATABASE_URL="${DATABASE_URL:-}"
-DB_HOST="${DB_HOST:-}"
-DB_USER="${DB_USER:-}"
-DB_PASSWORD="${DB_PASSWORD:-}"
-DB_NAME="${DB_NAME:-}"
-DB_PORT="${DB_PORT:-}"
-DB_SSL="${DB_SSL:-false}"
-NODE_ENV=production
-PORT=3000
-ENV
-
 sudo cp ~/local-service-booking/scripts/local-service-booking.service /etc/systemd/system/local-service-booking.service
 sudo systemctl daemon-reload
 sudo systemctl enable local-service-booking

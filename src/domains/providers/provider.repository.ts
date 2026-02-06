@@ -6,7 +6,6 @@ export class ProviderRepository {
   async findAll(): Promise<Provider[]> {
     try {
       const res = await query('SELECT id, name FROM providers');
-      logger.info('Response ', res);
       return res.rows.map((r: any) => ({ id: r.id, name: r.name }));
     } catch (err) {
       logger.error('Error fetching providers', err);
