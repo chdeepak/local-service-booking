@@ -21,6 +21,39 @@ Example env vars (GitHub Secrets):
 
 The code falls back to `postgres://localhost:5432/booking` when none of the vars are set.
 
+Local config file
+
+You can also create a local JSON config file at `config/db.local.json` (this file is git-ignored) using `config/db.example.json` as a template. Put your DB values there for local development instead of exporting env vars.
+
+Example (`config/db.local.json`):
+
+```json
+{
+  "DB_HOST": "your-db-host",
+  "DB_USER": "your-db-user",
+  "DB_PASSWORD": "your-db-password",
+  "DB_NAME": "booking",
+  "DB_PORT": "5432",
+  "DB_SSL": "false"
+}
+```
+
+Alternatively, use a `.env` file for local development
+
+- Copy the example: `cp .env.example .env`
+- Edit `.env` with your values (do NOT commit it)
+- The app loads `.env` automatically in development so `process.env.DATABASE_URL` will be available
+
+Production (EC2 + GitHub Secrets)
+
+- Store your DB connection in **GitHub Secrets** as `DATABASE_URL` (preferred) or individual `DB_*` secrets.
+- The GitHub Action and `scripts/deploy.sh` write secrets to `/etc/local-service-booking.env` on the EC2 instance and systemd loads them via `EnvironmentFile`.
+- This ensures `process.env.DATABASE_URL` is set when Node runs under systemd.
+
+Example GitHub Secret: `DATABASE_URL=postgres://user:password@your-rds-host:5432/booking`
+
+Note: For stronger security you can use AWS Secrets Manager or SSM Parameter Store and fetch secrets during deploy or at runtime — I can help integrate that if you want.
+
 ---
 
 ## Viewing logs 🧾
