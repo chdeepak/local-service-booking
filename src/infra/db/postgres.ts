@@ -9,7 +9,10 @@ export const getPool = (): Pool => {
     // Always disable SSL cert verification for RDS and self-signed certificates
     pool = new Pool({
       connectionString,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      ssl: process.env.NODE_ENV === 'production' ? {
+          rejectUnauthorized: false,
+          ca: fs.readFileSync('/etc/ssl/rds/global-bundle.pem').toString()
+ } : false,
     });
 
     pool.on('error', (err: Error) => {
