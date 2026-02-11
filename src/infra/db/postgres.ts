@@ -11,7 +11,6 @@ export const getPool = (): Pool => {
     pool = new Pool({
       connectionString,
       ssl: process.env.NODE_ENV === 'production' ? {
-          rejectUnauthorized: false,
           ca: fs.readFileSync('/etc/ssl/rds/global-bundle.pem').toString()
  } : false,
     });
