@@ -36,6 +36,16 @@ npm ci --omit=dev
 # Build the application
 npm run build
 
+# Configure environment file
+if [ -z "$DATABASE_URL" ]; then
+    echo "❌ ERROR: DATABASE_URL is not set"
+    exit 1
+fi
+
+sudo mkdir -p /etc/local-service-booking
+echo "DATABASE_URL=$DATABASE_URL" | sudo tee /etc/local-service-booking/.env > /dev/null
+sudo chmod 600 /etc/local-service-booking/.env
+
 # Copy systemd service file
 sudo cp "$APP_DIR/scripts/local-service-booking.service" /etc/systemd/system/
 sudo systemctl daemon-reload
