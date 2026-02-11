@@ -79,6 +79,7 @@ echo "📝 Creating environment file..."
 sudo mkdir -p /etc/local-service-booking
 echo "DATABASE_URL=$DATABASE_URL" | sudo tee /etc/local-service-booking/.env > /dev/null
 sudo chmod 600 /etc/local-service-booking/.env
+echo "DBURLS= $DATABASE_URL"
 echo "✓ Environment configured"
 
 echo ""
