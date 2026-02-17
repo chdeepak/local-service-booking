@@ -1,6 +1,5 @@
 import { Pool } from 'pg';
 import { getConnectionString } from '../../config/db.js';
-import fs from 'fs';
 
 let pool: Pool | null = null;
 
