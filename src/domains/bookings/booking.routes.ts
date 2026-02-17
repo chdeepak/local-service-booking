@@ -4,6 +4,17 @@ import { BookingService } from './booking.service.js';
 const router = Router();
 const bookingService = new BookingService();
 
+// GET /bookings - Get all bookings
+router.get('/', async (req, res) => {
+  try {
+    const bookings = await bookingService.getAllBookings();
+    res.json(bookings);
+  } catch (error) {
+    console.error('[ERROR]', error);
+    res.status(500).json({ error: 'Failed to fetch bookings' });
+  }
+});
+
 // POST /bookings - Create a booking
 router.post('/', async (req, res) => {
   try {

@@ -5,6 +5,10 @@ import { Booking } from './booking.entity.js';
 export class BookingService {
   constructor(private repo = new BookingRepository()) {}
 
+  async getAllBookings() {
+    return this.repo.findAll();
+  }
+
   async reserveSlot(slotId: string, userId: string): Promise<Booking> {
     const pool = getPool();
     const client = await pool.connect();

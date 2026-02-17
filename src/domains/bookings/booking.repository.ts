@@ -3,6 +3,38 @@ import { getPool } from '../../infra/db/postgres.js';
 import { PoolClient } from 'pg';
 
 export class BookingRepository {
+  async findAll(): Promise<Array<{
+    id: string;
+    userName: string;
+    providerName: string;
+    slotStart: string;
+    slotEnd: string;
+    status: string;
+  }>> {
+    const pool = getPool();
+    const result = await pool.query(
+      `SELECT 
+        b.id,
+        u.name as user_name,
+        p.name as provider_name,
+        b.slot_start,
+        b.slot_end,
+        b.status
+      FROM bookings b
+      JOIN users u ON b.user_id = u.id
+      JOIN providers p ON b.provider_id = p.id
+      ORDER BY b.slot_start DESC`
+    );
+    return result.rows.map(row => ({
+      id: row.id.toString(),
+      userName: row.user_name,
+      providerName: row.provider_name,
+      slotStart: row.slot_start,
+      slotEnd: row.slot_end,
+      status: row.status,
+    }));
+  }
+
   async findBySlotId(slotId: string): Promise<Booking | null> {
     const pool = getPool();
     const result = await pool.query(
