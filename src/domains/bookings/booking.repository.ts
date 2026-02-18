@@ -65,7 +65,7 @@ export class BookingRepository {
     const db = client || getPool();
     const result = await db.query(
       `INSERT INTO bookings(user_id, provider_id, slot_id, slot_start, slot_end, status)
-       VALUES($1, $2, $3, $4, $5, 'confirmed')
+       VALUES($1, $2, $3, $4, $5, 'pending')
        RETURNING id, user_id, provider_id, slot_id, slot_start, slot_end, status`,
       [userId, providerId, slotId, slotStart, slotEnd]
     );
