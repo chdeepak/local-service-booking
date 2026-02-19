@@ -77,7 +77,14 @@ fi
 
 echo "📝 Creating environment file..."
 sudo mkdir -p /etc/local-service-booking
-echo "DATABASE_URL=$DATABASE_URL" | sudo tee /etc/local-service-booking/.env
+sudo tee /etc/local-service-booking/.env > /dev/null <<EOF
+DATABASE_URL=$DATABASE_URL
+AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+AWS_REGION=$AWS_REGION
+AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+SQS_BOOKING_CONFIRMATION_QUEUE_URL=$SQS_BOOKING_CONFIRMATION_QUEUE_URL
+SQS_BOOKING_REQUEST_QUEUE_URL=$SQS_BOOKING_REQUEST_QUEUE_URL
+EOF
 sudo chmod 600 /etc/local-service-booking/.env
 echo "✓ Environment configured"
 
