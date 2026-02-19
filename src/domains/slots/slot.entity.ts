@@ -1,4 +1,4 @@
-import { ID, ISODate } from '../../shared/types';
+import { ID, ISODate } from '../../shared/types.js';
 
 export interface Slot {
   id: ID;

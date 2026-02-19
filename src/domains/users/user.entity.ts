@@ -1,4 +1,4 @@
-import { ID } from '../../shared/types';
+import { ID } from '../../shared/types.js';
 
 export interface User {
   id: ID;
