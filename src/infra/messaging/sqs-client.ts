@@ -2,6 +2,11 @@ import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 
 let sqsClient: SQSClient | null = null;
 
+const isFifoQueueUrl = (queueUrl: string): boolean => queueUrl.endsWith('.fifo');
+
+const getDeduplicationId = (eventType: string, bookingId: string, timestamp: string): string =>
+  `${eventType}-${bookingId}-${timestamp}`;
+
 export const getSQSClient = (): SQSClient => {
   if (!sqsClient) {
     sqsClient = new SQSClient({
@@ -39,9 +44,20 @@ export async function publishBookingRequestEvent(
   queueUrl: string
 ): Promise<string> {
   const client = getSQSClient();
+  const isFifo = isFifoQueueUrl(queueUrl);
   const command = new SendMessageCommand({
     QueueUrl: queueUrl,
     MessageBody: JSON.stringify(event),
+    ...(isFifo
+      ? {
+          MessageGroupId: event.providerId,
+          MessageDeduplicationId: getDeduplicationId(
+            event.eventType,
+            event.bookingId,
+            event.timestamp
+          ),
+        }
+      : {}),
     MessageAttributes: {
       EventType: {
         StringValue: 'BOOKING_CREATED',
@@ -74,9 +90,20 @@ export async function publishBookingConfirmationEvent(
   queueUrl: string
 ): Promise<string> {
   const client = getSQSClient();
+  const isFifo = isFifoQueueUrl(queueUrl);
   const command = new SendMessageCommand({
     QueueUrl: queueUrl,
     MessageBody: JSON.stringify(event),
+    ...(isFifo
+      ? {
+          MessageGroupId: event.providerId,
+          MessageDeduplicationId: getDeduplicationId(
+            event.eventType,
+            event.bookingId,
+            event.timestamp
+          ),
+        }
+      : {}),
     MessageAttributes: {
       EventType: {
         StringValue: 'BOOKING_CONFIRMED',
