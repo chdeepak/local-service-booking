@@ -112,4 +112,66 @@ export class BookingRepository {
       isBooked: row.is_booked,
     };
   }
+
+  async updateBookingStatus(
+    bookingId: string,
+    status: 'pending' | 'confirmed' | 'cancelled' | 'rejected',
+    client?: PoolClient
+  ): Promise<Booking | null> {
+    const db = client || getPool();
+    const result = await db.query(
+      `UPDATE bookings SET status = $1 WHERE id = $2
+       RETURNING id, user_id, provider_id, slot_id, slot_start, slot_end, status`,
+      [status, bookingId]
+    );
+    if (result.rows.length === 0) return null;
+    const row = result.rows[0];
+    return {
+      id: row.id.toString(),
+      userId: row.user_id.toString(),
+      providerId: row.provider_id.toString(),
+      slotId: row.slot_id.toString(),
+      start: row.slot_start,
+      end: row.slot_end,
+      status: row.status,
+    };
+  }
+
+  async findById(bookingId: string): Promise<Booking | null> {
+    const pool = getPool();
+    const result = await pool.query(
+      'SELECT id, user_id, provider_id, slot_id, slot_start, slot_end, status FROM bookings WHERE id = $1',
+      [bookingId]
+    );
+    if (result.rows.length === 0) return null;
+    const row = result.rows[0];
+    return {
+      id: row.id.toString(),
+      userId: row.user_id.toString(),
+      providerId: row.provider_id.toString(),
+      slotId: row.slot_id.toString(),
+      start: row.slot_start,
+      end: row.slot_end,
+      status: row.status,
+    };
+  }
+
+  async findByIdAndProviderId(bookingId: string, providerId: string): Promise<Booking | null> {
+    const pool = getPool();
+    const result = await pool.query(
+      'SELECT id, user_id, provider_id, slot_id, slot_start, slot_end, status FROM bookings WHERE id = $1 AND provider_id = $2',
+      [bookingId, providerId]
+    );
+    if (result.rows.length === 0) return null;
+    const row = result.rows[0];
+    return {
+      id: row.id.toString(),
+      userId: row.user_id.toString(),
+      providerId: row.provider_id.toString(),
+      slotId: row.slot_id.toString(),
+      start: row.slot_start,
+      end: row.slot_end,
+      status: row.status,
+    };
+  }
 }
